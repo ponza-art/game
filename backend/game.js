@@ -250,5 +250,5 @@ class SurvivalPathGame {
     }
   }
   
-  export default new SurvivalPathGame();
+  module.exports = new SurvivalPathGame();
   

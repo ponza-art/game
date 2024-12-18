@@ -1,8 +1,6 @@
-// api/socket.js
-
-import { Server } from 'socket.io';
-import http from 'http';
-import game from '../game'; // Import the game logic
+const { Server } = require('socket.io');
+const http = require('http');
+const game = require('../game'); // Include your game logic
 
 const handler = (req, res) => {
   // Create a basic HTTP server
@@ -44,7 +42,7 @@ const handler = (req, res) => {
           delete game.rooms[roomId].players[socket.id];
           game.removeEmptyRooms();
           io.to(roomId).emit('gameState', game.getGameState(roomId));
-          console.log(`Player ${socket.id} disconnected from room ${roomId}.`);
+          console.log(`Player ${socket.id} disconnected from room ${roomId}`);
         }
       }
     });
@@ -58,4 +56,4 @@ const handler = (req, res) => {
   res.status(200).send('Socket server is ready');
 };
 
-export default handler;
+module.exports = handler;
