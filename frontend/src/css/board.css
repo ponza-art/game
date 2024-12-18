@@ -1,0 +1,48 @@
+.text-neon {
+    color: #39ff14; /* Neon green */
+  }
+  
+  .bg-gray-900 {
+    background-color: #1a1a1a;
+  }
+  
+  .bg-gray-800 {
+    background-color: #2d2d2d;
+  }
+  
+  .bg-gray-700 {
+    background-color: #3d3d3d;
+  }
+  
+  .bg-green-600 {
+    background-color: #00ff00;
+  }
+  
+  .bg-red-600 {
+    background-color: #ff0000;
+  }
+  
+  .bg-blue-500 {
+    background-color: #0000ff;
+  }
+  
+  .border-gray-600 {
+    border-color: #4b4b4b;
+  }
+  
+  .shadow-lg {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
