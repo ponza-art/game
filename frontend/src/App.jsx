@@ -7,7 +7,7 @@ const App = () => {
   const [view, setView] = useState("home");
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-purple-900 via-black to-blue-900 text-neon">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-neon">
       {view === "home" ? (
         <RoomManager setRoomId={setRoomId} setView={setView} />
       ) : (

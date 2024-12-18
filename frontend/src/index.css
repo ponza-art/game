@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@keyframes neonPulse {
+  0%, 100% {
+    text-shadow: 0 0 5px #ff007f, 0 0 10px #ff007f, 0 0 20px #00e0ff;
+  }
+  50% {
+    text-shadow: 0 0 10px #00e0ff, 0 0 20px #ff007f, 0 0 30px #00ff7f;
+  }
+}
+
+.neon-glow {
+  animation: neonPulse 1.5s infinite alternate;
+}

@@ -9,6 +9,7 @@ const GameBoard = ({ roomId }) => {
   const [turnPlayer, setTurnPlayer] = useState(null);
 
   useEffect(() => {
+    // Update game state
     socket.on("gameState", (state) => {
       setGameState(state);
       if (state.players[socket.id]) {
@@ -16,16 +17,18 @@ const GameBoard = ({ roomId }) => {
       }
     });
 
-    socket.on("gameOver", (data) => alert(data.message));
+    // Highlight turn start
     socket.on("turnStart", (playerId) => {
       setTurnPlayer(playerId);
       startTimer();
     });
 
+    socket.on("gameOver", (data) => alert(data.message));
+
     return () => {
       socket.off("gameState");
-      socket.off("gameOver");
       socket.off("turnStart");
+      socket.off("gameOver");
     };
   }, [roomId]);
 
@@ -43,8 +46,8 @@ const GameBoard = ({ roomId }) => {
     }, 1000);
   };
 
-  const playCard = (card) => {
-    socket.emit("playCard", { roomId, card });
+  const playCard = (card, targetId) => {
+    socket.emit("playCard", { roomId, card, targetId });
     setPlayerHand((prevHand) => prevHand.filter((c) => c !== card));
   };
 
@@ -55,22 +58,28 @@ const GameBoard = ({ roomId }) => {
     return (
       <motion.div
         key={index}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className={`relative w-full h-full rounded-md flex items-center justify-center border shadow-md
-          ${isBonus ? "bg-cyber-green border-green-400" : isPenalty ? "bg-cyber-red border-red-400" : "bg-cyber-gray border-cyber-border"}`}
+        className={`relative flex items-center justify-center rounded-lg border shadow-lg p-2 ${
+          isBonus
+            ? " border-green-500 neon-glow"
+            : isPenalty
+            ? " border-red-500 neon-glow"
+            : " border-gray-600"
+        }`}
       >
-        <span className="text-xs font-bold text-cyber-text">{index + 1}</span>
+        <span className="text-white font-bold text-sm">{index + 1}</span>
+        {/* Player Tokens */}
         {gameState &&
           Object.entries(gameState.players).map(([playerId, player]) =>
             player.position === index + 1 ? (
               <motion.div
                 key={playerId}
-                className="absolute w-8 h-8 bg-cyber-blue text-cyber-text rounded-full flex items-center justify-center text-xs shadow-lg"
-                whileHover={{ scale: 1.2 }}
+                className="absolute w-8 h-8 rounded-full bg-yellow-400 text-center flex items-center justify-center text-xs font-bold text-black shadow-md"
+                whileHover={{ scale: 1.1 }}
               >
-                {player.username.substring(0, 2)}
+                {player.username.charAt(0).toUpperCase()}
               </motion.div>
             ) : null
           )}
@@ -81,48 +90,47 @@ const GameBoard = ({ roomId }) => {
   const renderAvatars = () => (
     <div className="flex flex-col space-y-4">
       {Object.entries(gameState?.players || {}).map(([playerId, player]) => (
-        <motion.div
-          key={playerId}
-          whileHover={{ scale: 1.1 }}
-          className="flex items-center space-x-4"
-        >
+        <div key={playerId} className="flex items-center space-x-4">
           <div
-            className={`relative w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg ${
-              turnPlayer === playerId ? "ring-4 ring-cyber-yellow" : "bg-cyber-gray"
+            className={`relative w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-lg ${
+              turnPlayer === playerId ? "ring-4 ring-pink-400" : "bg-gray-600"
             }`}
           >
             <img
-              src={player.avatar || "https://via.placeholder.com/150"}
+              src={
+                player.avatar ||
+                "https://via.placeholder.com/150/1f1f1f/FFFFFF?text=Avatar"
+              }
               alt={player.username}
               className="w-full h-full rounded-full object-cover"
             />
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold text-cyber-text">{player.username}</span>
+          <div className="flex flex-col text-white">
+            <span className="font-semibold text-lg">{player.username}</span>
             {turnPlayer === playerId && (
-              <span className="text-sm font-bold text-cyber-yellow">{timer}s</span>
+              <span className="text-pink-400 font-bold">{timer}s</span>
             )}
           </div>
-        </motion.div>
+        </div>
       ))}
     </div>
   );
 
   const renderScores = () => (
-    <div className="flex flex-col">
-      <h2 className="text-xl font-bold mb-4 text-center text-cyber-text">Scores</h2>
-      <table className="min-w-full table-auto text-center">
+    <div className="mt-4">
+      <h2 className="text-xl font-bold text-center text-white">Scores</h2>
+      <table className="w-full mt-2 table-auto text-center text-white border-separate border-spacing-2">
         <thead>
           <tr>
-            <th className="border px-4 py-2 text-cyber-text">Player</th>
-            <th className="border px-4 py-2 text-cyber-text">Score</th>
+            <th className="border px-4 py-2 bg-gray-800">Player</th>
+            <th className="border px-4 py-2 bg-gray-800">Score</th>
           </tr>
         </thead>
         <tbody>
           {Object.entries(gameState?.players || {}).map(([playerId, player]) => (
             <tr key={playerId}>
-              <td className="border px-4 py-2 text-cyber-text">{player.username}</td>
-              <td className="border px-4 py-2 text-cyber-text">{player.points}</td>
+              <td className="border px-4 py-2 bg-gray-700">{player.username}</td>
+              <td className="border px-4 py-2 bg-gray-700">{player.points}</td>
             </tr>
           ))}
         </tbody>
@@ -131,41 +139,45 @@ const GameBoard = ({ roomId }) => {
   );
 
   return (
-    <div className="p-6 grid grid-cols-1 lg:grid-cols-5 gap-4 bg-cyber-dark text-cyber-text">
-      {/* Left Side - Avatars */}
-      <div className="lg:col-span-1">
-        <h2 className="text-2xl font-bold mb-4 text-cyber-text">Players</h2>
-        {renderAvatars()}
-      </div>
+    <div className="p-4 grid grid-cols-1 lg:grid-cols-5 gap-6  text-white">
+      {/* Left Panel - Avatars */}
+      <div className="lg:col-span-1">{renderAvatars()}</div>
 
-      {/* Middle - Game Board */}
+      {/* Center - Board */}
       <div className="lg:col-span-3">
-        <h1 className="text-3xl font-bold mb-6 text-center text-cyber-text">Room: {roomId}</h1>
+        <h1 className="text-3xl font-bold text-center mb-4 neon-glow">
+          Room: {roomId}
+        </h1>
         <div className="grid grid-cols-5 gap-2 aspect-square">
           {Array.from({ length: 20 }).map((_, index) => renderSquare(index))}
         </div>
-        <h2 className="text-xl font-bold mt-6 mb-4 text-center text-cyber-text">Your Cards</h2>
-        <div className="flex space-x-4 justify-center">
+
+        {/* Cards */}
+        <h2 className="text-2xl text-center mt-4 mb-2 neon-glow">Your Cards</h2>
+        <div className="flex justify-center space-x-4">
           {playerHand.map((card, index) => (
             <motion.div
               key={index}
+              className={`p-4 w-32 h-48 rounded-lg  flex flex-col justify-between shadow-xl ${
+                card.type === "Bonus"
+                  ? "bg-zinc-800 text-neonGreen"
+                  : card.type === "Penalty"
+                  ? "bg-zinc-800 text-neonPink"
+                  : "bg-zinc-800 text-neonBlue"
+              } neon-glow`}
+              whileHover={{ scale: 1.05 }}
               onClick={() => playCard(card)}
-              whileHover={{ scale: 1.1, rotate: 2 }}
-              whileTap={{ scale: 0.95 }}
-              className={`w-32 h-48 rounded-lg shadow-lg cursor-pointer p-4 flex flex-col justify-between ${
-                card.type === "Bonus" ? "bg-cyber-green" : card.type === "Penalty" ? "bg-cyber-red" : "bg-cyber-gray"
-              }`}
             >
-              <div className="font-bold text-lg text-center text-cyber-text">{card.type}</div>
-              <div className="text-3xl text-center font-semibold text-cyber-text">{card.value || card.effect}</div>
-              <div className="text-sm text-right italic text-cyber-text">Play</div>
+              <div className="font-bold text-center text-xl">{card.type}</div>
+              <div className="text-2xl text-center">{card.value || card.effect}</div>
+              <div className="text-sm text-right italic opacity-70">Play</div>
             </motion.div>
           ))}
-          {playerHand.length === 0 && <div className="text-cyber-border">No cards left</div>}
+          {playerHand.length === 0 && <div>No cards available</div>}
         </div>
       </div>
 
-      {/* Right Side - Scores */}
+      {/* Right Panel - Scores */}
       <div className="lg:col-span-1">{renderScores()}</div>
     </div>
   );
