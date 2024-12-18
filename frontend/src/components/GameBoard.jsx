@@ -139,26 +139,27 @@ const GameBoard = ({ roomId }) => {
   );
 
   return (
-    <div className="p-4 grid grid-cols-1 lg:grid-cols-5 gap-6  text-white">
+    <div className="p-4 grid grid-cols-1 lg:grid-cols-5 gap-6   text-white">
       {/* Left Panel - Avatars */}
       <div className="lg:col-span-1">{renderAvatars()}</div>
 
       {/* Center - Board */}
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-3  ">
         <h1 className="text-3xl font-bold text-center mb-4 neon-glow">
           Room: {roomId}
         </h1>
-        <div className="grid grid-cols-5 gap-2 aspect-square">
+        <div className="grid grid-cols-5 gap-2 aspect-square w-96 mx-auto">
           {Array.from({ length: 20 }).map((_, index) => renderSquare(index))}
         </div>
 
         {/* Cards */}
-        <h2 className="text-2xl text-center mt-4 mb-2 neon-glow">Your Cards</h2>
-        <div className="flex justify-center space-x-4">
+        <h2 className="text-2xl text-center  mt-4 mb-2 neon-glow" >Your Cards</h2>
+        <div className="  w-full ">
+        <div className=" flex flex-wrap gap-3 justify-center">
           {playerHand.map((card, index) => (
             <motion.div
               key={index}
-              className={`p-4 w-32 h-48 rounded-lg  flex flex-col justify-between shadow-xl ${
+              className={`p-4 w-32 h-48 rounded-lg  flex flex-col  justify-between shadow-xl ${
                 card.type === "Bonus"
                   ? "bg-zinc-800 text-neonGreen"
                   : card.type === "Penalty"
@@ -169,11 +170,12 @@ const GameBoard = ({ roomId }) => {
               onClick={() => playCard(card)}
             >
               <div className="font-bold text-center text-xl">{card.type}</div>
-              <div className="text-2xl text-center">{card.value || card.effect}</div>
+              <div className="text-xl text-center">{card.value || card.effect}</div>
               <div className="text-sm text-right italic opacity-70">Play</div>
             </motion.div>
           ))}
           {playerHand.length === 0 && <div>No cards available</div>}
+        </div>
         </div>
       </div>
 
