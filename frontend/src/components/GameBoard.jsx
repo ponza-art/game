@@ -1,186 +1,171 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import socket from "../socket";
+import PlayerAvatars from "./PlayerAvatars";
+import GameLog from "./GameLog";
+import D3Board from "./D3Board";
+import ScoreTable from "./ScoreTable";
 
 const GameBoard = ({ roomId }) => {
   const [gameState, setGameState] = useState(null);
   const [playerHand, setPlayerHand] = useState([]);
+  const [gameLog, setGameLog] = useState([]);
   const [timer, setTimer] = useState(30);
   const [turnPlayer, setTurnPlayer] = useState(null);
+  const [playedCardIndex, setPlayedCardIndex] = useState(null);
+  const [intervalId, setIntervalId] = useState(null);
 
-  useEffect(() => {
-    // Update game state
-    socket.on("gameState", (state) => {
-      setGameState(state);
-      if (state.players[socket.id]) {
-        setPlayerHand(state.players[socket.id].hand);
-      }
-    });
-
-    // Highlight turn start
-    socket.on("turnStart", (playerId) => {
-      setTurnPlayer(playerId);
-      startTimer();
-    });
-
-    socket.on("gameOver", (data) => alert(data.message));
-
-    return () => {
-      socket.off("gameState");
-      socket.off("turnStart");
-      socket.off("gameOver");
-    };
-  }, [roomId]);
-
-  const startTimer = () => {
+  const startTimer = useCallback(() => {
     let countdown = 30;
-    const interval = setInterval(() => {
+    const id = setInterval(() => {
       if (countdown <= 0) {
-        clearInterval(interval);
+        clearInterval(id);
         setTimer(30);
-        socket.emit("endTurn", { roomId });
+        if (turnPlayer === socket.id) {
+          socket.emit("endTurn", { roomId });
+        }
       } else {
         setTimer(countdown);
         countdown--;
       }
     }, 1000);
+
+    setIntervalId(id);
+  }, [turnPlayer, roomId]);
+
+  const addGameLog = (message) => {
+    setGameLog((prevLog) => [...prevLog, message]);
   };
 
-  const playCard = (card, targetId) => {
-    socket.emit("playCard", { roomId, card, targetId });
-    setPlayerHand((prevHand) => prevHand.filter((c) => c !== card));
+  const playCard = (card, cardIndex) => {
+    if (!card || !card.type) {
+      alert("Invalid card selected.");
+      return;
+    }
+
+    if (turnPlayer !== socket.id) {
+      alert("It's not your turn!");
+      return;
+    }
+
+    setPlayedCardIndex(cardIndex);
+
+    setTimeout(() => {
+      setPlayerHand((prevHand) => prevHand.filter((_, index) => index !== cardIndex));
+      setPlayedCardIndex(null);
+    }, 500);
+
+    socket.emit("playCard", { roomId, cardIndex });
   };
 
-  const renderSquare = (index) => {
-    const isBonus = index % 5 === 0;
-    const isPenalty = index % 7 === 0;
+  useEffect(() => {
+    const handleGameState = (state) => {
+      setGameState(state);
+      if (state?.players?.[socket.id]?.hand) {
+        setPlayerHand(state.players[socket.id].hand || []);
+      }
 
-    return (
-      <motion.div
-        key={index}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        className={`relative flex items-center justify-center rounded-lg border shadow-lg p-2 ${
-          isBonus
-            ? " border-green-500 neon-glow"
-            : isPenalty
-            ? " border-red-500 neon-glow"
-            : " border-gray-600"
-        }`}
-      >
-        <span className="text-white font-bold text-sm">{index + 1}</span>
-        {/* Player Tokens */}
-        {gameState &&
-          Object.entries(gameState.players).map(([playerId, player]) =>
-            player.position === index + 1 ? (
-              <motion.div
-                key={playerId}
-                className="absolute w-8 h-8 rounded-full bg-yellow-400 text-center flex items-center justify-center text-xs font-bold text-black shadow-md"
-                whileHover={{ scale: 1.1 }}
-              >
-                {player.username.charAt(0).toUpperCase()}
-              </motion.div>
-            ) : null
-          )}
-      </motion.div>
-    );
-  };
+      if (state?.gameState?.currentTurn !== turnPlayer) {
+        setTurnPlayer(state.gameState.currentTurn);
+        clearInterval(intervalId);
+        setTimer(30);
 
-  const renderAvatars = () => (
-    <div className="flex flex-col space-y-4">
-      {Object.entries(gameState?.players || {}).map(([playerId, player]) => (
-        <div key={playerId} className="flex items-center space-x-4">
-          <div
-            className={`relative w-14 h-14 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-lg ${
-              turnPlayer === playerId ? "ring-4 ring-pink-400" : "bg-gray-600"
-            }`}
-          >
-            <img
-              src={
-                player.avatar ||
-                "https://via.placeholder.com/150/1f1f1f/FFFFFF?text=Avatar"
-              }
-              alt={player.username}
-              className="w-full h-full rounded-full object-cover"
-            />
-          </div>
-          <div className="flex flex-col text-white">
-            <span className="font-semibold text-lg">{player.username}</span>
-            {turnPlayer === playerId && (
-              <span className="text-pink-400 font-bold">{timer}s</span>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+        if (state.gameState.currentTurn === socket.id) {
+          startTimer();
+          addGameLog("It's your turn!");
+        } else {
+          const playerName =
+            state?.players?.[state.gameState.currentTurn]?.username || "Another player";
+          addGameLog(`${playerName}'s turn.`);
+        }
+      }
+    };
 
-  const renderScores = () => (
-    <div className="mt-4">
-      <h2 className="text-xl font-bold text-center text-white">Scores</h2>
-      <table className="w-full mt-2 table-auto text-center text-white border-separate border-spacing-2">
-        <thead>
-          <tr>
-            <th className="border px-4 py-2 bg-gray-800">Player</th>
-            <th className="border px-4 py-2 bg-gray-800">Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(gameState?.players || {}).map(([playerId, player]) => (
-            <tr key={playerId}>
-              <td className="border px-4 py-2 bg-gray-700">{player.username}</td>
-              <td className="border px-4 py-2 bg-gray-700">{player.points}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+    const handleGameOver = (data) => {
+      clearInterval(intervalId);
+      addGameLog(`Game Over: ${data.message}`);
+      alert(data.message);
+    };
+
+    const handleCardPlayed = ({ playerId, card }) => {
+      const playerName = gameState?.players[playerId]?.username || "Player";
+      addGameLog(
+        `${playerName} played ${card?.type || "Unknown"} (${card?.effect || card?.value || "No Effect"}).`
+      );
+    };
+
+    socket.on("gameState", handleGameState);
+    socket.on("gameOver", handleGameOver);
+    socket.on("cardPlayed", handleCardPlayed);
+
+    return () => {
+      socket.off("gameState", handleGameState);
+      socket.off("gameOver", handleGameOver);
+      socket.off("cardPlayed", handleCardPlayed);
+      clearInterval(intervalId);
+    };
+  }, [gameState?.players, turnPlayer, intervalId, startTimer]);
 
   return (
-    <div className="p-4 grid grid-cols-1 lg:grid-cols-5 gap-6   text-white">
-      {/* Left Panel - Avatars */}
-      <div className="lg:col-span-1">{renderAvatars()}</div>
+    <div className="p-4 grid grid-cols-1 lg:grid-cols-5 gap-6  text-white">
+      <div className="lg:col-span-1 ">
+        <PlayerAvatars gameState={gameState} timer={timer} turnPlayer={turnPlayer} />
+        <GameLog logs={gameLog} />
+      </div>
 
-      {/* Center - Board */}
-      <div className="lg:col-span-3  ">
+      <div className="lg:col-span-3 mx-auto">
         <h1 className="text-3xl font-bold text-center mb-4 neon-glow">
           Room: {roomId}
         </h1>
-        <div className="grid grid-cols-5 gap-2 aspect-square w-96 mx-auto">
-          {Array.from({ length: 20 }).map((_, index) => renderSquare(index))}
+        <D3Board gameState={gameState} />
+        <h2 className="text-2xl text-center mt-4 mb-2 neon-glow">Your Cards</h2>
+        <div className="text-center text-lg font-bold mb-2">
+          {turnPlayer === socket.id ? "It's your turn!" : "Waiting for others..."}
         </div>
-
-        {/* Cards */}
-        <h2 className="text-2xl text-center  mt-4 mb-2 neon-glow" >Your Cards</h2>
-        <div className="  w-full ">
-        <div className=" flex flex-wrap gap-3 justify-center">
+        <div className="text-center text-xl font-semibold text-red-500">
+          Timer: {timer}s
+        </div>
+        <div className="flex flex-wrap gap-3 justify-center mt-4">
           {playerHand.map((card, index) => (
             <motion.div
-              key={index}
-              className={`p-4 w-32 h-48 rounded-lg  flex flex-col  justify-between shadow-xl ${
-                card.type === "Bonus"
-                  ? "bg-zinc-800 text-neonGreen"
-                  : card.type === "Penalty"
-                  ? "bg-zinc-800 text-neonPink"
-                  : "bg-zinc-800 text-neonBlue"
-              } neon-glow`}
-              whileHover={{ scale: 1.05 }}
-              onClick={() => playCard(card)}
+              key={card.id || `${card.type}-${index}`}
+              className={`p-4 w-40 h-60 rounded-lg flex flex-col justify-between shadow-xl bg-gradient-to-br from-purple-600 to-indigo-700 neon-glow ${
+                index === playedCardIndex ? "opacity-50" : ""
+              } ${
+                turnPlayer !== socket.id ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+              }`}
+              onClick={() => playCard(card, index)}
+              initial={{ rotateY: 0 }}
+              animate={{ rotateY: index === playedCardIndex ? 180 : 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="font-bold text-center text-xl">{card.type}</div>
-              <div className="text-xl text-center">{card.value || card.effect}</div>
-              <div className="text-sm text-right italic opacity-70">Play</div>
+              <div className="font-bold text-center text-xl mt-2">{card.type || "Unknown"}</div>
+              <motion.svg
+                className="w-full h-32"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 100 100"
+              >
+                <motion.path
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2"
+                  d="M10 10 H 90 V 90 H 10 Z"
+                  animate={{
+                    d: index === playedCardIndex ? "M20 20 H 80 V 80 H 20 Z" : "M10 10 H 90 V 90 H 10 Z",
+                  }}
+                  transition={{ duration: 0.5 }}
+                />
+              </motion.svg>
+              <div className="text-xl text-center mb-2">{card.value || card.effect || "No Effect"}</div>
             </motion.div>
           ))}
-          {playerHand.length === 0 && <div>No cards available</div>}
-        </div>
         </div>
       </div>
 
-      {/* Right Panel - Scores */}
-      <div className="lg:col-span-1">{renderScores()}</div>
+      <div className="lg:col-span-1">
+        <ScoreTable players={gameState?.players} />
+      </div>
     </div>
   );
 };
