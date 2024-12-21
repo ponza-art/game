@@ -1,62 +1,88 @@
-import React, { useEffect, useRef } from "react";
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
+import React, { useRef, useContext, useEffect } from "react";
 import * as d3 from "d3";
-import { getPlayerAvatar } from "./avatarUtils"; // Import the utility function
+import { GameStateContext } from "../context/GameStateContext";
 
-const D3Board = ({ gameState }) => {
+const D3Board = () => {
+  const { gameState } = useContext(GameStateContext);
   const svgRef = useRef();
+  const borderColorsRef = useRef([]);
 
   useEffect(() => {
-    const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
+    console.log("Updated gameState:", gameState);
 
-    const columns = 5;
-    const rows = 4;
-    const cellSize = 120;
+    const board = gameState?.gameState?.board || [];
+    const players = gameState?.players || {};
+    const columns = 9;
+    const rows = Math.ceil(board.length / columns);
+    const cellSize = 80;
     const width = columns * cellSize;
     const height = rows * cellSize;
 
-    const colors = {
-      background: "#2a2a40",
-      grid: "#5c5c7d",
-      highlightGrid: "#ff4d4d",
-      text: "#f5e242",
-    };
+    const playerColors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FFC300"];
+
+    // Generate random colors for the borders only once
+    if (borderColorsRef.current.length !== board.length) {
+      borderColorsRef.current = board.map(
+        () => `#${Math.floor(Math.random() * 16777215).toString(16)}`
+      );
+    }
+
+    const borderColors = borderColorsRef.current;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
 
     svg
-      .attr("width", width)
-      .attr("height", height)
-      .style("background", colors.background);
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("preserveAspectRatio", "xMidYMid meet")
+      .style("background", "#2a2a40");
 
-    svg
-      .append("g")
+    const gridGroup = svg.append("g");
+
+    gridGroup
       .selectAll("rect")
-      .data(d3.range(columns * rows))
+      .data(board)
       .enter()
       .append("rect")
-      .attr("x", (d) => (d % columns) * cellSize)
-      .attr("y", (d) => Math.floor(d / columns) * cellSize)
+      .attr("x", (_, i) => (i % columns) * cellSize)
+      .attr("y", (_, i) => Math.floor(i / columns) * cellSize)
       .attr("width", cellSize - 2)
       .attr("height", cellSize - 2)
-      .attr("fill", (d) => (d % 5 === 0 ? colors.highlightGrid : colors.grid))
-      .attr("stroke", colors.text);
+      .attr("fill", "none") // No fill
+      .attr("stroke", (_, i) => borderColors[i]) // Persist border colors
+      .attr("stroke-width", 2);
 
-    if (gameState) {
-      Object.values(gameState.players).forEach((player) => {
-        const playerAvatar = getPlayerAvatar(player.username); // Use the same avatar logic
-        svg
-          .append("text")
-          .attr("x", (player.position % columns) * cellSize + cellSize / 2)
-          .attr("y", Math.floor(player.position / columns) * cellSize + cellSize / 2)
-          .attr("text-anchor", "middle")
-          .attr("dominant-baseline", "central")
-          .text(playerAvatar)
-          .attr("font-size", "32px")
-          .attr("fill", "#ffdd57");
-      });
-    }
+    gridGroup
+      .selectAll("text.cell-number")
+      .data(board)
+      .enter()
+      .append("text")
+      .attr("class", "cell-number")
+      .attr("x", (_, i) => (i % columns) * cellSize + cellSize / 2)
+      .attr("y", (_, i) => Math.floor(i / columns) * cellSize + cellSize / 2)
+      .attr("dy", 4)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", 14)
+      .attr("fill", "#fff")
+      .text((d) => d); // Use the value from the board array
+
+    Object.entries(players).forEach(([playerId, player], index) => {
+      const playerColor = playerColors[index % playerColors.length];
+      gridGroup
+        .append("circle")
+        .attr("cx", (player.position % columns) * cellSize + cellSize / 2)
+        .attr("cy", Math.floor(player.position / columns) * cellSize + cellSize / 2)
+        .attr("r", cellSize / 3)
+        .attr("fill", "none")
+        .attr("stroke", playerColor)
+        .attr("stroke-width", 4);
+    });
   }, [gameState]);
 
-  return <svg ref={svgRef}></svg>;
+  return <svg ref={svgRef} className="w-full h-auto"></svg>;
 };
 
 export default D3Board;
