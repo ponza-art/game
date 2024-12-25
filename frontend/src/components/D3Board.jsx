@@ -1,5 +1,3 @@
-
-
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import React, { useRef, useContext, useEffect } from "react";
@@ -52,9 +50,9 @@ const D3Board = () => {
       .attr("y", (_, i) => Math.floor(i / columns) * cellSize)
       .attr("width", cellSize - 2)
       .attr("height", cellSize - 2)
-      .attr("fill", "none") // No fill
-      .attr("stroke", (_, i) => borderColors[i]) // Persist border colors
-      .attr("stroke-width", 2)
+      .attr("fill", (d) => d === 45 ? "rgba(255, 215, 0, 0.2)" : "none") // Highlight the cell containing 45
+      .attr("stroke", (d, i) => d === 45 ? "#FFD700" : borderColors[i]) // Added index parameter 'i'
+      .attr("stroke-width", (d) => d === 45 ? 4 : 2)
       .on("mouseover", function () {
         d3.select(this).attr("fill", "rgba(255, 255, 255, 0.1)");
       })

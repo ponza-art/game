@@ -54,13 +54,41 @@ const GameBoard = ({ roomId }) => {
     setTargetPlayerId(e.target.value);
   };
 
+  useEffect(() => {
+    // Add listener for timer expiration
+    socket.on("timerExpired", () => {
+      // Add to game log
+      addGameLog("Turn timer expired - moving to next player");
+      
+      // Reset any selected card or target
+      setPlayedCardIndex(null);
+      setTargetPlayerId("");
+    });
+
+    return () => {
+      socket.off("timerExpired");
+    };
+  }, [addGameLog]);
+
+  if (!gameState?.gameState?.gameStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
+        <h2 className="text-3xl font-bold mb-4 neon-glow">Waiting for players...</h2>
+        <p className="text-xl">Need at least 2 players to start</p>
+        <p className="mt-4">Current players: {Object.keys(gameState?.players || {}).length}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 grid grid-rows-[auto,1fr] gap-4 text-white">
       {/* Header */}
       <header className="text-center">
         <h1 className="text-4xl font-bold neon-glow">Room: {roomId}</h1>
         <div className="text-lg mt-2 font-semibold">
-          Timer: <span className="text-red-500">{timer}s</span>
+          <div>Round: {gameState.gameState.currentRound}/3</div>
+          <div>Round Timer: {Math.floor(gameState.gameState.roundTimer / 60)}:{(gameState.gameState.roundTimer % 60).toString().padStart(2, '0')}</div>
+          <div>Turn Timer: <span className="text-red-500">{timer}s</span></div>
         </div>
       </header>
 

@@ -1,26 +1,36 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState } from "react";
-import { getPlayerAvatar } from "./avatarUtils"; // Import the utility function
+import React from "react";
+import { getPlayerAvatar } from "./avatarUtils";
 
 const PlayerAvatars = ({ gameState, timer, turnPlayer }) => {
-  const [progress, setProgress] = useState(100);
-
-  useEffect(() => {
-    setProgress(Math.abs((timer / 30) * 100));
-  }, [timer]);
+  const progress = Math.abs((timer / 30) * 100);
 
   return (
     <div className="flex flex-col items-center space-y-6">
-      <div className="text-center text-xl text-pink-400 font-bold">
-        Time Left: {timer}s
+      {/* Timer Display for All Players */}
+      <div className="w-full bg-gray-800 rounded-lg p-4 text-center">
+        <div className="text-xl font-bold">
+          {gameState?.players[turnPlayer]?.username}'s Turn
+        </div>
+        <div className="text-3xl text-pink-400 font-bold">
+          {timer}s
+        </div>
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
+          <div
+            className="bg-pink-400 h-2 rounded-full transition-all duration-200"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
+      {/* Player Avatars */}
       <div className="flex flex-wrap gap-6 justify-center">
         {Object.entries(gameState?.players || {}).map(([playerId, player]) => {
           const isCurrentTurn = turnPlayer === playerId;
           const strokeDasharray = 251.2;
-          const strokeDashoffset = strokeDasharray - (progress / 100) * strokeDasharray;
+          const strokeDashoffset = strokeDasharray - (isCurrentTurn ? (progress / 100) * strokeDasharray : 0);
 
           return (
             <div key={playerId} className="relative flex flex-col items-center space-y-2">
@@ -35,7 +45,7 @@ const PlayerAvatars = ({ gameState, timer, turnPlayer }) => {
                     stroke={isCurrentTurn ? "#ff4081" : "#aaa"}
                     strokeWidth="8"
                     strokeDasharray={strokeDasharray}
-                    strokeDashoffset={strokeDashoffset}
+                    strokeDashoffset={isCurrentTurn ? strokeDashoffset : 0}
                     style={{ transition: "stroke-dashoffset 0.1s linear" }}
                   />
                 </svg>
@@ -46,7 +56,7 @@ const PlayerAvatars = ({ gameState, timer, turnPlayer }) => {
 
               <div className="text-white text-center">
                 <span className="font-semibold">{player.username}</span>
-                {isCurrentTurn && <div className="text-pink-400 font-bold">Your Turn!</div>}
+                {isCurrentTurn && <div className="text-pink-400 font-bold">Current Turn</div>}
               </div>
             </div>
           );

@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import socket from "../socket";
 
 const RoomManager = ({ setRoomId, setView }) => {
@@ -15,7 +15,12 @@ const RoomManager = ({ setRoomId, setView }) => {
     }
     setError("");
     socket.emit("createRoom", roomInput.trim());
-    joinRoom();
+    socket.emit("joinRoom", { 
+        roomId: roomInput.trim(), 
+        username: username.trim() 
+    });
+    setRoomId(roomInput.trim());
+    setView("game");
   };
 
   const joinRoom = () => {
@@ -24,10 +29,23 @@ const RoomManager = ({ setRoomId, setView }) => {
       return;
     }
     setError("");
-    socket.emit("joinRoom", { roomId: roomInput.trim(), username: username.trim() });
+    socket.emit("joinRoom", { 
+        roomId: roomInput.trim(), 
+        username: username.trim() 
+    });
     setRoomId(roomInput.trim());
     setView("game");
   };
+
+  useEffect(() => {
+    socket.on("actionError", ({ message }) => {
+        setError(message);
+    });
+
+    return () => {
+        socket.off("actionError");
+    };
+  }, []);
 
   return (
     <div className="p-6 flex flex-col items-center space-y-6 text-center bg-gray-900 text-white w-full sm:px-8 lg:max-w-4xl">
