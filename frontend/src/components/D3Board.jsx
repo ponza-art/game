@@ -1,3 +1,5 @@
+
+
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import React, { useRef, useContext, useEffect } from "react";
@@ -52,7 +54,13 @@ const D3Board = () => {
       .attr("height", cellSize - 2)
       .attr("fill", "none") // No fill
       .attr("stroke", (_, i) => borderColors[i]) // Persist border colors
-      .attr("stroke-width", 2);
+      .attr("stroke-width", 2)
+      .on("mouseover", function () {
+        d3.select(this).attr("fill", "rgba(255, 255, 255, 0.1)");
+      })
+      .on("mouseout", function () {
+        d3.select(this).attr("fill", "none");
+      });
 
     gridGroup
       .selectAll("text.cell-number")
@@ -78,7 +86,8 @@ const D3Board = () => {
         .attr("r", cellSize / 3)
         .attr("fill", "none")
         .attr("stroke", playerColor)
-        .attr("stroke-width", 4);
+        .attr("stroke-width", 4)
+        .attr("class", "pulsing-circle");
     });
   }, [gameState]);
 

@@ -12,6 +12,7 @@ export default {
         neonGreen: "#00ff7f",
         darkBg: "#1a1a2e",
         darkAccent: "#16213e",
+        gold:"#FFD700"
       },
       fontFamily: {
         cyber: ["Orbitron", "sans-serif"], // Example of a cyberpunk-style font

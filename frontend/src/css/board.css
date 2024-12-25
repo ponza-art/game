@@ -1,48 +1,47 @@
-.text-neon {
-    color: #39ff14; /* Neon green */
+.card {
+    width: 190px;
+    height: 254px;
+    background: #07182E;
+    position: relative;
+    display: flex;
+    place-content: center;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 20px;
+    cursor: pointer;
   }
   
-  .bg-gray-900 {
-    background-color: #1a1a1a;
+  .card h2 {
+    z-index: 1;
+    color: white;
+    font-size: 2em;
   }
   
-  .bg-gray-800 {
-    background-color: #2d2d2d;
+  .card::before {
+    content: '';
+    position: absolute;
+    width: 100px;
+    background-image: linear-gradient(180deg, rgb(0, 183, 255), rgb(255, 48, 255));
+    height: 130%;
+    animation: rotBGimg 3s linear infinite;
+    transition: all 0.2s linear;
   }
   
-  .bg-gray-700 {
-    background-color: #3d3d3d;
-  }
-  
-  .bg-green-600 {
-    background-color: #00ff00;
-  }
-  
-  .bg-red-600 {
-    background-color: #ff0000;
-  }
-  
-  .bg-blue-500 {
-    background-color: #0000ff;
-  }
-  
-  .border-gray-600 {
-    border-color: #4b4b4b;
-  }
-  
-  .shadow-lg {
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
-  }
-  
-  .animate-pulse {
-    animation: pulse 2s infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
+  @keyframes rotBGimg {
+    from {
+      transform: rotate(0deg);
     }
-    50% {
-      opacity: 0.5;
+  
+    to {
+      transform: rotate(360deg);
     }
   }
+  
+  .card::after {
+    content: '';
+    position: absolute;
+    background: #07182E;
+    inset: 5px;
+    border-radius: 15px;
+  }
+  

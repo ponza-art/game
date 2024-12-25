@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-
+// eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useContext } from "react";
@@ -22,6 +22,7 @@ const GameBoard = ({ roomId }) => {
   } = useContext(GameStateContext);
 
   const [playedCardIndex, setPlayedCardIndex] = useState(null);
+  const [targetPlayerId, setTargetPlayerId] = useState("");
 
   const playCard = (card, cardIndex) => {
     if (!card || !card.type) {
@@ -34,68 +35,108 @@ const GameBoard = ({ roomId }) => {
       return;
     }
 
+    if (card.type === "Mind Play" && !targetPlayerId) {
+      alert("Please select a target player.");
+      return;
+    }
+
     setPlayedCardIndex(cardIndex);
 
     setTimeout(() => {
       setPlayedCardIndex(null);
     }, 500);
 
-    socket.emit("playCard", { roomId, cardIndex });
+    socket.emit("playCard", { roomId, cardIndex, targetPlayerId });
+    setTargetPlayerId(""); // Reset the target player selection
+  };
+
+  const handleTargetChange = (e) => {
+    setTargetPlayerId(e.target.value);
   };
 
   return (
-    <div className="p-4 grid grid-cols-1 lg:grid-cols-5 gap-6 text-white">
-      {/* Player Avatars and Game Log */}
-      <div className="lg:col-span-1 space-y-4">
-        <PlayerAvatars gameState={gameState} timer={timer} turnPlayer={turnPlayer} />
-        <GameLog logs={gameLog} />
-      </div>
+    <div className="p-6 grid grid-rows-[auto,1fr] gap-4 text-white">
+      {/* Header */}
+      <header className="text-center">
+        <h1 className="text-4xl font-bold neon-glow">Room: {roomId}</h1>
+        <div className="text-lg mt-2 font-semibold">
+          Timer: <span className="text-red-500">{timer}s</span>
+        </div>
+      </header>
 
-      {/* Board and Player Hand */}
-      <div className="lg:col-span-3 flex flex-col items-center">
-        <h1 className="text-3xl font-bold text-center mb-4 neon-glow">
-          Room: {roomId}
-        </h1>
-        <D3Board />
-        <h2 className="text-2xl text-center mt-4 mb-2 neon-glow">Your Cards</h2>
-        <div className="text-center text-lg font-bold mb-2">
-          {turnPlayer === socket.id ? "It's your turn!" : "Waiting for others..."}
-        </div>
-        <div className="text-center text-xl font-semibold text-red-500">
-          Timer: {timer}s
-        </div>
-        <div className="flex flex-wrap gap-3 justify-center mt-4">
-          {playerHand.map((card, index) => (
-            <motion.div
-              key={card.id || `${card.type}-${index}`}
-              className={`p-4 w-32 h-48 rounded-lg flex flex-col justify-between shadow-xl ${
-                card.type === "Event"
-                  ? "bg-gradient-to-br from-yellow-400 to-red-500 text-black"
-                  : "bg-gradient-to-br from-purple-600 to-indigo-700 text-white"
-              } ${index === playedCardIndex ? "opacity-50" : ""} ${
-                turnPlayer !== socket.id ? "cursor-not-allowed opacity-50" : "cursor-pointer"
-              }`}
-              onClick={() => playCard(card, index)}
-              initial={{ rotateY: 0 }}
-              animate={{ rotateY: index === playedCardIndex ? 180 : 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="font-bold text-center text-sm mt-2">{card.type || "Unknown"}</div>
-              <div className="text-center text-xs">{card.effect || card.value || "No Effect"}</div>
-              {card.type === "Event" && (
-                <div className="text-center mt-2 italic text-xs">
-                  {"(Event Card)"}
+      {/* Main Content */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Left Section */}
+        <aside className="col-span-3 space-y-6">
+          <PlayerAvatars gameState={gameState} timer={timer} turnPlayer={turnPlayer} />
+          <GameLog logs={gameLog} />
+        </aside>
+
+        {/* Center Section */}
+        <main className="col-span-6 flex flex-col items-center">
+          <D3Board />
+          <h2 className="text-2xl font-bold mt-6 neon-glow">Your Cards</h2>
+          <div className="text-lg font-semibold mb-4">
+            {turnPlayer === socket.id ? "It's your turn!" : "Waiting for others..."}
+          </div>
+          <div className="flex flex-wrap gap-4 justify-center">
+            {playerHand.map((card, index) => (
+              <motion.div
+                key={card.id || `${card.type}-${index}`}
+                className={`p-4 w-32 h-48 rounded-lg flex flex-col justify-between shadow-lg transform transition-transform ${
+                  card.type === "Mind Play"
+                    ? "bg-gradient-to-br from-green-400 to-blue-500 text-white"
+                    : card.type === "Event"
+                    ? "bg-gradient-to-br from-yellow-400 to-red-500 text-black"
+                    : "bg-gradient-to-br from-purple-600 to-indigo-700 text-white"
+                } ${index === playedCardIndex ? "scale-95" : ""} ${
+                  turnPlayer !== socket.id ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                }`}
+                onClick={() => playCard(card, index)}
+                initial={{ rotateY: 0 }}
+                animate={{ rotateY: index === playedCardIndex ? 180 : 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="font-bold text-center text-sm">{card.type || "Unknown"}</div>
+                <div className="text-center text-xs flex-grow flex items-center justify-center">
+                  {card.effect || card.value || "No Effect"}
                 </div>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      </div>
+                {card.type === "Event" && (
+                  <div className="text-center mt-2 italic text-xs">
+                    {"(Event Card)"}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+          {playerHand.some((card) => card.type === "Mind Play") && (
+            <div className="mt-4 flex items-center gap-4">
+              <label htmlFor="target-player" className="text-lg font-semibold">
+                Target Player:
+              </label>
+              <select
+                id="target-player"
+                value={targetPlayerId}
+                onChange={handleTargetChange}
+                className="bg-gray-700 text-white p-2 rounded-lg"
+              >
+                <option value="">Select a player</option>
+                {Object.entries(gameState.players)
+                  .filter(([id]) => id !== socket.id)
+                  .map(([id, player]) => (
+                    <option key={id} value={id}>
+                      {player.username}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+        </main>
 
-      {/* Score Table */}
-      <div className="lg:col-span-1">
-        <ScoreTable players={gameState?.players} />
+        {/* Right Section */}
+        <aside className="col-span-3">
+          <ScoreTable players={gameState?.players} />
+        </aside>
       </div>
     </div>
   );

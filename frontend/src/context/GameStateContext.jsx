@@ -1,6 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react-refresh/only-export-components */
-/* eslint-disable react/prop-types */
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import socket from "../socket";
 
@@ -62,12 +59,18 @@ export const GameStateProvider = ({ children }) => {
       alert(data.message);
     };
 
+    const handlePlayCardEvent = (eventDetails) => {
+      addGameLog(eventDetails);
+    };
+
     socket.on("gameState", handleGameState);
     socket.on("gameOver", handleGameOver);
+    socket.on("playCardEvent", handlePlayCardEvent);
 
     return () => {
       socket.off("gameState", handleGameState);
       socket.off("gameOver", handleGameOver);
+      socket.off("playCardEvent", handlePlayCardEvent);
       clearInterval(intervalId);
     };
   }, [turnPlayer, intervalId, startTimer]);
