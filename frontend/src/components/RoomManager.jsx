@@ -72,13 +72,13 @@ const RoomManager = ({ setRoomId, setView }) => {
       <div className="space-y-4 mt-4 sm:space-y-0 sm:space-x-4 flex flex-col sm:flex-row w-full">
         <button
           onClick={createRoom}
-          className="btn btn-primary btn-wide shadow-neon shadow-neonPink hover:text-white hover:shadow-neonGreen hover:bg-transparent bg-transparent text-neonPink w-full sm:w-auto"
+          className="btn btn-primary  hover:text-white hover:bg-transparent bg-transparent text-neonPink w-full sm:w-auto"
         >
           Create Room
         </button>
         <button
           onClick={joinRoom}
-          className="btn btn-accent btn-wide shadow-neon hover:text-white hover:shadow-neonGreen hover:bg-transparent shadow-neonBlue hover:border-neonBlue bg-transparent text-neonBlue w-full sm:w-auto"
+          className="btn btn-accent   hover:text-white hover:bg-transparent shadow-neonBlue hover:border-neonBlue bg-transparent text-neonBlue w-full sm:w-auto"
         >
           Join Room
         </button>
