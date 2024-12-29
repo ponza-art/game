@@ -77,15 +77,34 @@ const D3Board = () => {
 
     Object.entries(players).forEach(([playerId, player], index) => {
       const playerColor = playerColors[index % playerColors.length];
+      
+      // Find the index of the player's position value in the board array
+      const boardIndex = board.indexOf(player.position);
+      
+      // Calculate position on board using the found index
+      const x = (boardIndex % columns) * cellSize + cellSize / 2;
+      const y = Math.floor(boardIndex / columns) * cellSize + cellSize / 2;
+
+      // Add player marker
       gridGroup
         .append("circle")
-        .attr("cx", (player.position % columns) * cellSize + cellSize / 2)
-        .attr("cy", Math.floor(player.position / columns) * cellSize + cellSize / 2)
+        .attr("cx", x)
+        .attr("cy", y)
         .attr("r", cellSize / 3)
         .attr("fill", "none")
         .attr("stroke", playerColor)
         .attr("stroke-width", 4)
         .attr("class", "pulsing-circle");
+
+      // Add moves counter
+      gridGroup
+        .append("text")
+        .attr("x", x)
+        .attr("y", y + 5)
+        .attr("text-anchor", "middle")
+        .attr("fill", playerColor)
+        .attr("font-size", "12px")
+        .text(`${player.moves}`);
     });
   }, [gameState]);
 

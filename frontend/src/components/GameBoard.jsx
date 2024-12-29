@@ -147,6 +147,11 @@ const GameBoard = ({ roomId }) => {
         <aside className="order-2 md:order-1 lg:col-span-3 space-y-4">
           <div className="bg-gray-800 p-3 rounded-lg">
             <PlayerAvatars gameState={gameState} timer={timer} turnPlayer={turnPlayer} />
+            {gameState?.players && gameState.players[socket.id] && (
+              <div className="text-center mt-2 text-sm">
+                Your Moves: {gameState.players[socket.id].moves}
+              </div>
+            )}
           </div>
           <div className="bg-gray-800 p-3 rounded-lg max-h-48 overflow-y-auto">
             <GameLog logs={gameLog} />
