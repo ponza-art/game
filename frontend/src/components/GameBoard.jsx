@@ -23,6 +23,7 @@ const GameBoard = ({ roomId }) => {
 
   const [playedCardIndex, setPlayedCardIndex] = useState(null);
   const [targetPlayerId, setTargetPlayerId] = useState("");
+  const [moveDirection, setMoveDirection] = useState('forward');
 
   const playCard = (card, cardIndex) => {
     if (!card || !card.type) {
@@ -35,7 +36,7 @@ const GameBoard = ({ roomId }) => {
       return;
     }
 
-    if (card.type === "Mind Play" && !targetPlayerId) {
+    if ((card.type === "Mind Play" || (card.type === "Event" && card.effect === "Swap Places")) && !targetPlayerId) {
       toast.error("Please select a target player");
       return;
     }
@@ -46,7 +47,12 @@ const GameBoard = ({ roomId }) => {
       setPlayedCardIndex(null);
     }, 500);
 
-    socket.emit("playCard", { roomId, cardIndex, targetPlayerId });
+    socket.emit("playCard", { 
+      roomId, 
+      cardIndex, 
+      targetPlayerId,
+      direction: card.type === "Move" ? moveDirection : undefined 
+    });
     setTargetPlayerId(""); // Reset the target player selection
   };
 
@@ -69,6 +75,42 @@ const GameBoard = ({ roomId }) => {
       socket.off("timerExpired");
     };
   }, [addGameLog]);
+
+  // Add direction selector for Move cards and target selector for Mind Play cards
+  const renderCardControls = (card) => {
+    if (card.type === "Move") {
+      return (
+        <select
+          value={moveDirection}
+          onChange={(e) => setMoveDirection(e.target.value)}
+          className="mt-1 sm:mt-2 bg-gray-700 text-white p-1 text-xs rounded-lg w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <option value="forward">Forward</option>
+          <option value="backward">Backward</option>
+        </select>
+      );
+    } else if (card.type === "Mind Play" || (card.type === "Event" && card.effect === "Swap Places")) {
+      return (
+        <select
+          value={targetPlayerId}
+          onChange={handleTargetChange}
+          className="mt-1 sm:mt-2 bg-gray-700 text-white p-1 text-xs rounded-lg w-full"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <option value="">Select Target</option>
+          {Object.entries(gameState.players)
+            .filter(([id]) => id !== socket.id)
+            .map(([id, player]) => (
+              <option key={id} value={id}>
+                {player.username || id}
+              </option>
+            ))}
+        </select>
+      );
+    }
+    return null;
+  };
 
   if (!gameState?.gameState?.gameStarted) {
     return (
@@ -152,23 +194,7 @@ const GameBoard = ({ roomId }) => {
                 <div className="text-center text-xs sm:text-sm flex-grow flex items-center justify-center px-1">
                   {card.effect || card.value || "No Effect"}
                 </div>
-                {((card.type === "Event" && card.effect === "Swap Places") || card.type === "Mind Play") && (
-                  <select
-                    value={targetPlayerId}
-                    onChange={handleTargetChange}
-                    className="mt-1 sm:mt-2 bg-gray-700 text-white p-1 text-xs rounded-lg w-full"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <option value="">Select target</option>
-                    {Object.entries(gameState.players)
-                      .filter(([id]) => id !== socket.id)
-                      .map(([id, player]) => (
-                        <option key={id} value={id}>
-                          {player.username}
-                        </option>
-                      ))}
-                  </select>
-                )}
+                {renderCardControls(card)}
               </motion.div>
             ))}
           </div>
