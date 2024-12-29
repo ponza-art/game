@@ -9,6 +9,7 @@ import GameLog from "./GameLog";
 import D3Board from "./D3Board";
 import ScoreTable from "./ScoreTable";
 import socket from "../socket";
+import toast from 'react-hot-toast';
 
 const GameBoard = ({ roomId }) => {
   const {
@@ -25,17 +26,17 @@ const GameBoard = ({ roomId }) => {
 
   const playCard = (card, cardIndex) => {
     if (!card || !card.type) {
-      alert("Invalid card selected.");
+      toast.error("Invalid card selected");
       return;
     }
 
     if (turnPlayer !== socket.id) {
-      alert("It's not your turn!");
+      toast.error("It's not your turn!");
       return;
     }
 
     if (card.type === "Mind Play" && !targetPlayerId) {
-      alert("Please select a target player.");
+      toast.error("Please select a target player");
       return;
     }
 
