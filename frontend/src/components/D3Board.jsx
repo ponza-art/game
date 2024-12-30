@@ -97,14 +97,7 @@ const D3Board = () => {
         .attr("class", "pulsing-circle");
 
       // Add moves counter
-      gridGroup
-        .append("text")
-        .attr("x", x)
-        .attr("y", y + 5)
-        .attr("text-anchor", "middle")
-        .attr("fill", playerColor)
-        .attr("font-size", "12px")
-        .text(`${player.moves}`);
+      
     });
   }, [gameState]);
 
