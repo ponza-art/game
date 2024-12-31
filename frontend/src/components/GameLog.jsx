@@ -17,7 +17,7 @@ const GameLog = ({ logs }) => {
       <h2 className="text-xl font-bold text-yellow-400 mb-2 text-center sm:text-2xl">Game Log</h2>
       <div 
         ref={logContainerRef}
-        className="text-sm text-white space-y-1 max-h-40 overflow-y-auto custom-scrollbar sm:text-base"
+        className="text-sm text-white space-y-1 max-h-40  sm:text-base"
       >
         {logs.map((log, index) => (
           <div 
