@@ -59,8 +59,11 @@ export const GameStateProvider = ({ children }) => {
     };
 
     const handlePlayerDisconnect = (playerId) => {
-      addGameLog(`${gameState?.players[playerId]?.username || 'A player'} disconnected. AI will take over.`);
-      toast.info("AI player has joined the game");
+      const playerName = gameState?.players[playerId]?.username || 'A player';
+      addGameLog(`${playerName} disconnected. AI will take over their moves.`);
+      toast.info(`AI is now controlling ${playerName}'s moves`, {
+        icon: '🤖',
+      });
     };
 
     socket.on("gameState", handleGameState);
@@ -76,7 +79,7 @@ export const GameStateProvider = ({ children }) => {
       socket.off("roundEnd", handleRoundEnd);
       socket.off("playerDisconnected", handlePlayerDisconnect);
     };
-  }, [turnPlayer]);
+  }, [gameState, turnPlayer]);
 
   return (
     <GameStateContext.Provider

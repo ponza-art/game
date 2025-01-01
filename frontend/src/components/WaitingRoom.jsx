@@ -17,57 +17,44 @@ const WaitingRoom = ({ roomId, players, isHost }) => {
     socket.emit("startGame", roomId);
   };
 
-  const addAI = () => {
-    if (players.length >= 6) {
-      toast.error("Room is full");
-      return;
-    }
-    socket.emit("addAI", roomId);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4">
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold text-yellow-400 mb-4 text-center neon-glow">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex flex-col items-center justify-center p-4">
+      <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl shadow-2xl max-w-md w-full border border-gray-700">
+        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500 mb-6 text-center">
           Waiting Room
         </h2>
         
-        <div className="space-y-2 mb-6">
-          <p className="text-yellow-400 text-center">Room ID: {roomId}</p>
-          <p className="text-green-400 text-center">
-            Players ({players.length}/6):
+        <div className="space-y-4 mb-8">
+          <p className="text-yellow-400 text-center font-medium">Room ID: {roomId}</p>
+          <p className="text-green-400 text-center font-medium">
+            Players ({players.length}/6)
           </p>
-          <div className="bg-gray-700 p-3 rounded">
+          <div className="bg-gray-900/50 p-4 rounded-lg backdrop-blur-sm">
             {players.map((player) => (
-              <div key={player.id} className="text-white flex items-center space-x-2">
+              <div key={player.id} className="flex items-center space-x-3 py-2 px-3 rounded-md hover:bg-gray-800/30 transition-colors">
                 <span>{player.isAI ? '🤖' : '👤'}</span>
-                <span className={player.isAI ? 'text-blue-400' : 'text-white'}>
+                <span className={`flex-1 ${player.isAI ? 'text-blue-400' : 'text-white'}`}>
                   {player.username}
                 </span>
-                {player.isHost && <span className="text-yellow-400">(Host)</span>}
+                {player.isHost && (
+                  <span className="text-yellow-400 text-sm font-medium px-2 py-1 rounded-full bg-yellow-400/10">
+                    Host
+                  </span>
+                )}
               </div>
             ))}
           </div>
         </div>
 
-        {isHost && (
-          <div className="space-y-2">
-            <button
-              onClick={startGame}
-              className="w-full btn btn-primary hover:text-white hover:bg-transparent bg-transparent text-neonGreen"
-            >
-              Start Game
-            </button>
-            <button
-              onClick={addAI}
-              className="w-full btn btn-secondary hover:text-white hover:bg-transparent bg-transparent text-neonPink"
-            >
-              Add AI Player
-            </button>
-          </div>
-        )}
-        {!isHost && (
-          <p className="text-gray-400 text-center">
+        {isHost ? (
+          <button
+            onClick={startGame}
+            className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium hover:from-green-600 hover:to-emerald-700 transition-colors transform hover:scale-105 duration-200"
+          >
+            Start Game
+          </button>
+        ) : (
+          <p className="text-gray-400 text-center text-sm">
             Waiting for host to start the game...
           </p>
         )}
