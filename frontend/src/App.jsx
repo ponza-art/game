@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React,{useState} from "react";
 import { GameStateProvider } from "./context/GameStateContext";
 import RoomManager from "./components/RoomManager";

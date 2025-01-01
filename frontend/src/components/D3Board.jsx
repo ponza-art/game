@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
 import React, { useRef, useContext, useEffect } from "react";
 import * as d3 from "d3";
 import { GameStateContext } from "../context/GameStateContext";

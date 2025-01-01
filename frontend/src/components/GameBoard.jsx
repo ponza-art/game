@@ -10,6 +10,7 @@ import D3Board from "./D3Board";
 import ScoreTable from "./ScoreTable";
 import socket from "../socket";
 import toast from 'react-hot-toast';
+import WaitingRoom from "./WaitingRoom";
 
 const GameBoard = ({ roomId }) => {
   const {
@@ -28,6 +29,12 @@ const GameBoard = ({ roomId }) => {
   const playCard = (card, cardIndex) => {
     if (!card || !card.type) {
       toast.error("Invalid card selected");
+      return;
+    }
+
+    const currentPosition = gameState?.players[socket.id]?.position;
+    if (currentPosition >= 45) {
+      toast.error("You've already reached the end!");
       return;
     }
 
@@ -114,11 +121,16 @@ const GameBoard = ({ roomId }) => {
 
   if (!gameState?.gameState?.gameStarted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-900 text-white">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-4 neon-glow text-center">Waiting for players...</h2>
-        <p className="text-lg sm:text-xl text-center">Need at least 2 players to start</p>
-        <p className="mt-4 text-base sm:text-lg">Current players: {Object.keys(gameState?.players || {}).length}</p>
-      </div>
+      <WaitingRoom 
+        roomId={roomId} 
+        players={Object.entries(gameState?.players || {}).map(([id, player]) => ({
+          id,
+          username: player.username,
+          isHost: player.isHost,
+          isAI: player.isAI
+        }))}
+        isHost={gameState?.players?.[socket.id]?.isHost}
+      />
     );
   }
 

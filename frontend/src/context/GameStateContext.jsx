@@ -1,5 +1,9 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable react/prop-types */
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import socket from "../socket";
+import { toast } from "react-hot-toast";
 
 export const GameStateContext = createContext();
 
@@ -48,14 +52,29 @@ export const GameStateProvider = ({ children }) => {
       addGameLog(eventDetails);
     };
 
+    const handleRoundEnd = (data) => {
+      const winnerName = data.winnerName || "A player";
+      addGameLog(`Round ended! ${winnerName} reached the end of the board!`);
+      toast.success(`${winnerName} won the round!`);
+    };
+
+    const handlePlayerDisconnect = (playerId) => {
+      addGameLog(`${gameState?.players[playerId]?.username || 'A player'} disconnected. AI will take over.`);
+      toast.info("AI player has joined the game");
+    };
+
     socket.on("gameState", handleGameState);
     socket.on("gameOver", handleGameOver);
     socket.on("playCardEvent", handlePlayCardEvent);
+    socket.on("roundEnd", handleRoundEnd);
+    socket.on("playerDisconnected", handlePlayerDisconnect);
 
     return () => {
       socket.off("gameState", handleGameState);
       socket.off("gameOver", handleGameOver);
       socket.off("playCardEvent", handlePlayCardEvent);
+      socket.off("roundEnd", handleRoundEnd);
+      socket.off("playerDisconnected", handlePlayerDisconnect);
     };
   }, [turnPlayer]);
 
